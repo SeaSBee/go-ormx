@@ -25,10 +25,15 @@ type Repository[T any] interface {
 	FindFirstByConditions(ctx context.Context, dest *T, conds ...interface{}) error
 	FirstOrInitByConditions(ctx context.Context, dest *T, conds ...interface{}) error
 
-	FindAll(ctx context.Context) ([]*T, error)
-	FindAllInBatches(ctx context.Context, dest *[]T, batchSize int, fc func(tx *gorm.DB, batch int) error) error
-	FindAllByConditions(ctx context.Context, dest *[]T, conds ...interface{}) error
-	FindAllInBatchesByConditions(ctx context.Context, dest *[]T, batchSize int, fc func(tx *gorm.DB, batch int) error, conds ...interface{}) error
+	FindAllWithOffset(ctx context.Context, limit int, offset int, dest *[]T) error
+	FindAllInBatchesWithOffset(ctx context.Context, limit int, offset int, dest *[]T, batchSize int, fc func(tx *gorm.DB, batch int) error) error
+	FindAllByConditionsWithOffset(ctx context.Context, limit int, offset int, dest *[]T, conds ...interface{}) error
+	FindAllInBatchesByConditionsWithOffset(ctx context.Context, limit int, offset int, dest *[]T, batchSize int, fc func(tx *gorm.DB, batch int) error, conds ...interface{}) error
+
+	FindAllWithCursor(ctx context.Context, cursor string, limit int, direction string, dest *[]T) error
+	FindAllInBatchesWithCursor(ctx context.Context, cursor string, limit int, direction string, dest *[]T, batchSize int, fc func(tx *gorm.DB, batch int) error) error
+	FindAllByConditionsWithCursor(ctx context.Context, cursor string, limit int, direction string, dest *[]T, conds ...interface{}) error
+	FindAllInBatchesByConditionsWithCursor(ctx context.Context, cursor string, limit int, direction string, dest *[]T, batchSize int, fc func(tx *gorm.DB, batch int) error, conds ...interface{}) error
 
 	Update(ctx context.Context, entity *T) error
 	UpdateByID(ctx context.Context, entity *T, id uuid.UUID) error
@@ -340,29 +345,32 @@ func (r *BaseRepository[T]) FirstOrInitByConditions(ctx context.Context, dest *T
 	return nil
 }
 
-// FindAll finds all entities
-func (r *BaseRepository[T]) FindAll(ctx context.Context) ([]*T, error) {
+// FindAllWithOffset finds all entities
+func (r *BaseRepository[T]) FindAllWithOffset(ctx context.Context, limit int, offset int, dest *[]T) error {
 	start := time.Now()
 	defer func() {
 		r.metrics.RecordQueryTime(time.Since(start))
 	}()
 
-	var entities []*T
-	if err := r.db.WithContext(ctx).Find(&entities).Error; err != nil {
+	limit, offset = r.validateOffsetPaginationParams(limit, offset)
+
+	if err := r.db.WithContext(ctx).Limit(limit).Offset(offset).Find(dest).Error; err != nil {
 		r.metrics.IncrementOperations(false)
-		return nil, fmt.Errorf("failed to find all entities: %w", err)
+		return fmt.Errorf("failed to find all entities: %w", err)
 	}
 
 	r.metrics.IncrementOperations(true)
-	return entities, nil
+	return nil
 }
 
-// FindAllInBatches finds all entities in batches
-func (r *BaseRepository[T]) FindAllInBatches(ctx context.Context, dest *[]T, batchSize int, fc func(tx *gorm.DB, batch int) error) error {
+// FindAllInBatchesWithOffset finds all entities in batches
+func (r *BaseRepository[T]) FindAllInBatchesWithOffset(ctx context.Context, limit int, offset int, dest *[]T, batchSize int, fc func(tx *gorm.DB, batch int) error) error {
 	start := time.Now()
 	defer func() {
 		r.metrics.RecordQueryTime(time.Since(start))
 	}()
+
+	limit, offset = r.validateOffsetPaginationParams(limit, offset)
 
 	// Validate batch size
 	if batchSize <= 0 {
@@ -370,7 +378,7 @@ func (r *BaseRepository[T]) FindAllInBatches(ctx context.Context, dest *[]T, bat
 		return fmt.Errorf("batch size must be greater than 0, got %d", batchSize)
 	}
 
-	if err := r.db.WithContext(ctx).FindInBatches(dest, batchSize, fc).Error; err != nil {
+	if err := r.db.WithContext(ctx).Limit(limit).Offset(offset).FindInBatches(dest, batchSize, fc).Error; err != nil {
 		r.metrics.IncrementOperations(false)
 		return fmt.Errorf("failed to find all entities in batches: %w", err)
 	}
@@ -379,18 +387,20 @@ func (r *BaseRepository[T]) FindAllInBatches(ctx context.Context, dest *[]T, bat
 	return nil
 }
 
-// FindAllByConditions finds all entities by conditions
-func (r *BaseRepository[T]) FindAllByConditions(ctx context.Context, dest *[]T, conds ...interface{}) error {
+// FindAllByConditionsWithOffset finds all entities by conditions
+func (r *BaseRepository[T]) FindAllByConditionsWithOffset(ctx context.Context, limit int, offset int, dest *[]T, conds ...interface{}) error {
 	start := time.Now()
 	defer func() {
 		r.metrics.RecordQueryTime(time.Since(start))
 	}()
 
+	limit, offset = r.validateOffsetPaginationParams(limit, offset)
+
 	var err error
 	if len(conds) == 0 {
-		err = r.db.WithContext(ctx).Find(dest).Error
+		err = r.db.WithContext(ctx).Limit(limit).Offset(offset).Find(dest).Error
 	} else {
-		err = r.db.WithContext(ctx).Where(conds[0], conds[1:]...).Find(dest).Error
+		err = r.db.WithContext(ctx).Limit(limit).Offset(offset).Where(conds[0], conds[1:]...).Find(dest).Error
 	}
 
 	if err != nil {
@@ -402,12 +412,14 @@ func (r *BaseRepository[T]) FindAllByConditions(ctx context.Context, dest *[]T, 
 	return nil
 }
 
-// FindAllInBatchesByConditions finds all entities in batches by conditions
-func (r *BaseRepository[T]) FindAllInBatchesByConditions(ctx context.Context, dest *[]T, batchSize int, fc func(tx *gorm.DB, batch int) error, conds ...interface{}) error {
+// FindAllInBatchesByConditionsWithOffset finds all entities in batches by conditions
+func (r *BaseRepository[T]) FindAllInBatchesByConditionsWithOffset(ctx context.Context, limit int, offset int, dest *[]T, batchSize int, fc func(tx *gorm.DB, batch int) error, conds ...interface{}) error {
 	start := time.Now()
 	defer func() {
 		r.metrics.RecordQueryTime(time.Since(start))
 	}()
+
+	limit, offset = r.validateOffsetPaginationParams(limit, offset)
 
 	// Validate batch size
 	if batchSize <= 0 {
@@ -417,9 +429,159 @@ func (r *BaseRepository[T]) FindAllInBatchesByConditions(ctx context.Context, de
 
 	var err error
 	if len(conds) == 0 {
-		err = r.db.WithContext(ctx).FindInBatches(dest, batchSize, fc).Error
+		err = r.db.WithContext(ctx).Limit(limit).Offset(offset).FindInBatches(dest, batchSize, fc).Error
 	} else {
-		err = r.db.WithContext(ctx).Where(conds[0], conds[1:]...).FindInBatches(dest, batchSize, fc).Error
+		err = r.db.WithContext(ctx).Limit(limit).Offset(offset).Where(conds[0], conds[1:]...).FindInBatches(dest, batchSize, fc).Error
+	}
+
+	if err != nil {
+		r.metrics.IncrementOperations(false)
+		return fmt.Errorf("failed to find all entities in batches by conditions: %w", err)
+	}
+
+	r.metrics.IncrementOperations(true)
+	return nil
+}
+
+// FindAllWithCursor finds all entities
+func (r *BaseRepository[T]) FindAllWithCursor(ctx context.Context, cursor string, limit int, direction string, dest *[]T) error {
+	start := time.Now()
+	defer func() {
+		r.metrics.RecordQueryTime(time.Since(start))
+	}()
+
+	cursor, limit, direction = r.validateCursorPaginationParams(cursor, limit, direction)
+
+	// Build query with cursor
+	query := r.db.WithContext(ctx).Limit(limit)
+
+	if cursor != "" {
+		// For cursor-based pagination, we need to know the cursor field
+		// This is a simplified implementation - in practice, you'd need to specify the cursor field
+		if direction == "next" {
+			query = query.Where("id > ?", cursor)
+		} else {
+			query = query.Where("id < ?", cursor)
+		}
+	}
+
+	if err := query.Find(dest).Error; err != nil {
+		r.metrics.IncrementOperations(false)
+		return fmt.Errorf("failed to find all entities: %w", err)
+	}
+
+	r.metrics.IncrementOperations(true)
+	return nil
+}
+
+// FindAllInBatchesWithCursor finds all entities in batches
+func (r *BaseRepository[T]) FindAllInBatchesWithCursor(ctx context.Context, cursor string, limit int, direction string, dest *[]T, batchSize int, fc func(tx *gorm.DB, batch int) error) error {
+	start := time.Now()
+	defer func() {
+		r.metrics.RecordQueryTime(time.Since(start))
+	}()
+
+	cursor, limit, direction = r.validateCursorPaginationParams(cursor, limit, direction)
+
+	// Build query with cursor
+	query := r.db.WithContext(ctx).Limit(limit)
+
+	if cursor != "" {
+		// For cursor-based pagination, we need to know the cursor field
+		// This is a simplified implementation - in practice, you'd need to specify the cursor field
+		if direction == "next" {
+			query = query.Where("id > ?", cursor)
+		} else {
+			query = query.Where("id < ?", cursor)
+		}
+	}
+
+	// Validate batch size
+	if batchSize <= 0 {
+		r.metrics.IncrementOperations(false)
+		return fmt.Errorf("batch size must be greater than 0, got %d", batchSize)
+	}
+
+	if err := query.FindInBatches(dest, batchSize, fc).Error; err != nil {
+		r.metrics.IncrementOperations(false)
+		return fmt.Errorf("failed to find all entities in batches: %w", err)
+	}
+
+	r.metrics.IncrementOperations(true)
+	return nil
+}
+
+// FindAllByConditionsWithCursor finds all entities by conditions
+func (r *BaseRepository[T]) FindAllByConditionsWithCursor(ctx context.Context, cursor string, limit int, direction string, dest *[]T, conds ...interface{}) error {
+	start := time.Now()
+	defer func() {
+		r.metrics.RecordQueryTime(time.Since(start))
+	}()
+
+	cursor, limit, direction = r.validateCursorPaginationParams(cursor, limit, direction)
+
+	// Build query with cursor
+	query := r.db.WithContext(ctx).Limit(limit)
+
+	if cursor != "" {
+		// For cursor-based pagination, we need to know the cursor field
+		// This is a simplified implementation - in practice, you'd need to specify the cursor field
+		if direction == "next" {
+			query = query.Where("id > ?", cursor)
+		} else {
+			query = query.Where("id < ?", cursor)
+		}
+	}
+
+	var err error
+	if len(conds) == 0 {
+		err = query.Find(dest).Error
+	} else {
+		err = query.Where(conds[0], conds[1:]...).Find(dest).Error
+	}
+
+	if err != nil {
+		r.metrics.IncrementOperations(false)
+		return fmt.Errorf("failed to find all entities by conditions: %w", err)
+	}
+
+	r.metrics.IncrementOperations(true)
+	return nil
+}
+
+// FindAllInBatchesByConditionsWithCursor finds all entities in batches by conditions
+func (r *BaseRepository[T]) FindAllInBatchesByConditionsWithCursor(ctx context.Context, cursor string, limit int, direction string, dest *[]T, batchSize int, fc func(tx *gorm.DB, batch int) error, conds ...interface{}) error {
+	start := time.Now()
+	defer func() {
+		r.metrics.RecordQueryTime(time.Since(start))
+	}()
+
+	cursor, limit, direction = r.validateCursorPaginationParams(cursor, limit, direction)
+
+	// Build query with cursor
+	query := r.db.WithContext(ctx).Limit(limit)
+
+	if cursor != "" {
+		// For cursor-based pagination, we need to know the cursor field
+		// This is a simplified implementation - in practice, you'd need to specify the cursor field
+		if direction == "next" {
+			query = query.Where("id > ?", cursor)
+		} else {
+			query = query.Where("id < ?", cursor)
+		}
+	}
+
+	// Validate batch size
+	if batchSize <= 0 {
+		r.metrics.IncrementOperations(false)
+		return fmt.Errorf("batch size must be greater than 0, got %d", batchSize)
+	}
+
+	var err error
+	if len(conds) == 0 {
+		err = query.FindInBatches(dest, batchSize, fc).Error
+	} else {
+		err = query.Where(conds[0], conds[1:]...).FindInBatches(dest, batchSize, fc).Error
 	}
 
 	if err != nil {
@@ -998,6 +1160,41 @@ func (r *BaseRepository[T]) Validate(ctx context.Context, entity *T) (*validator
 
 // Helper methods
 
+// validateOffsetPaginationParams validates and normalizes pagination parameters
+func (r *BaseRepository[T]) validateOffsetPaginationParams(limit, offset int) (int, int) {
+	limit = r.validateLimit(limit)
+
+	if offset < 0 {
+		offset = 0
+	}
+
+	return limit, offset
+}
+
+// validateLimit validates and normalizes limit parameter
+func (r *BaseRepository[T]) validateLimit(limit int) int {
+	if limit < 1 {
+		limit = r.config.DefaultLimit
+	}
+	if limit > r.config.MaxLimit {
+		limit = r.config.MaxLimit
+	}
+
+	return limit
+}
+
+// validateCursorPaginationParams validates and normalizes cursor pagination parameters
+func (r *BaseRepository[T]) validateCursorPaginationParams(cursor string, limit int, direction string) (string, int, string) {
+	limit = r.validateLimit(limit)
+
+	// Normalize direction
+	if direction != "next" && direction != "prev" {
+		direction = "next"
+	}
+
+	return cursor, limit, direction
+}
+
 // getEntityID extracts ID from entity
 func (r *BaseRepository[T]) getEntityID(entity *T) uuid.UUID {
 	if entity == nil {
@@ -1017,91 +1214,4 @@ func (r *BaseRepository[T]) getEntityID(entity *T) uuid.UUID {
 	}
 
 	return uuid.Nil
-}
-
-// Paginate implements offset-based pagination
-func (r *BaseRepository[T]) PaginateWithOffset(ctx context.Context, limit, offset int, dest interface{}) error {
-	start := time.Now()
-	defer func() {
-		r.metrics.RecordQueryTime(time.Since(start))
-	}()
-
-	// Validate pagination parameters
-	if limit < 1 {
-		limit = 1
-	}
-	if limit < 1 {
-		limit = r.config.DefaultLimit
-	}
-	if limit > r.config.MaxLimit {
-		limit = r.config.MaxLimit
-	}
-
-	if offset < 0 {
-		offset = 0
-	}
-
-	// Execute paginated query
-	if err := r.db.WithContext(ctx).Offset(offset).Limit(limit).Find(dest).Error; err != nil {
-		r.metrics.IncrementOperations(false)
-		return fmt.Errorf("failed to paginate results: %w", err)
-	}
-
-	r.metrics.IncrementOperations(true)
-	r.logger.Info(ctx, "Pagination completed successfully",
-		logging.String("table", r.tableName),
-		logging.Int("limit", limit),
-		logging.Int("limit_size", limit),
-		logging.Int("offset_size", offset))
-
-	return nil
-}
-
-// PaginateWithCursor implements cursor-based pagination
-func (r *BaseRepository[T]) PaginateWithCursor(ctx context.Context, cursor string, limit int, direction string, dest interface{}) error {
-	start := time.Now()
-	defer func() {
-		r.metrics.RecordQueryTime(time.Since(start))
-	}()
-
-	// Validate pagination parameters
-	if limit < 1 {
-		limit = r.config.DefaultLimit
-	}
-	if limit > r.config.MaxLimit {
-		limit = r.config.MaxLimit
-	}
-
-	// Normalize direction
-	if direction != "next" && direction != "prev" {
-		direction = "next"
-	}
-
-	// Build query with cursor
-	query := r.db.WithContext(ctx).Limit(limit)
-
-	if cursor != "" {
-		// For cursor-based pagination, we need to know the cursor field
-		// This is a simplified implementation - in practice, you'd need to specify the cursor field
-		if direction == "next" {
-			query = query.Where("id > ?", cursor)
-		} else {
-			query = query.Where("id < ?", cursor)
-		}
-	}
-
-	// Execute cursor-based paginated query
-	if err := query.Find(dest).Error; err != nil {
-		r.metrics.IncrementOperations(false)
-		return fmt.Errorf("failed to paginate with cursor: %w", err)
-	}
-
-	r.metrics.IncrementOperations(true)
-	r.logger.Info(ctx, "Cursor-based pagination completed successfully",
-		logging.String("table", r.tableName),
-		logging.String("cursor", cursor),
-		logging.Int("limit_size", limit),
-		logging.String("direction", direction))
-
-	return nil
 }

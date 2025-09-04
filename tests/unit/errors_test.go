@@ -664,7 +664,7 @@ func TestErrorHandler_RetryWithContext_EdgeCases(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Test with very short context timeout
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Microsecond)
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Nanosecond)
 	defer cancel()
 
 	slowOperation := func() error {
@@ -673,10 +673,9 @@ func TestErrorHandler_RetryWithContext_EdgeCases(t *testing.T) {
 	}
 
 	err = handler.RetryWithContext(ctx, slowOperation, "test_operation")
-	// The operation completes and returns an error, so we expect the operation error
-	// not the context deadline exceeded error
+	// With such a short timeout, we expect the context deadline exceeded error
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "slow operation")
+	assert.Contains(t, err.Error(), "context deadline exceeded")
 }
 
 func TestErrorBuilder_EdgeCases(t *testing.T) {

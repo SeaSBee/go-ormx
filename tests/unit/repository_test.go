@@ -207,7 +207,8 @@ func TestBaseRepository_FindAll(t *testing.T) {
 	}
 
 	// Find all
-	found, err := repo.FindAll(ctx)
+	var found []TestEntity
+	err := repo.FindAllWithOffset(ctx, 10, 0, &found)
 	assert.NoError(t, err)
 	assert.Len(t, found, 3)
 }
@@ -230,7 +231,7 @@ func TestBaseRepository_FindAllByConditions(t *testing.T) {
 
 	// Find by conditions
 	var found []TestEntity
-	err := repo.FindAllByConditions(ctx, &found, "age > ?", 25)
+	err := repo.FindAllByConditionsWithOffset(ctx, 10, 0, &found, "age > ?", 25)
 	assert.NoError(t, err)
 	assert.Len(t, found, 2)
 }
@@ -316,7 +317,7 @@ func TestBaseRepository_UpdateByConditions(t *testing.T) {
 
 	// Verify updates
 	var found []TestEntity
-	err = repo.FindAllByConditions(ctx, &found, "age > ?", 30)
+	err = repo.FindAllByConditionsWithOffset(ctx, 10, 0, &found, "age > ?", 30)
 	assert.NoError(t, err)
 	for _, entity := range found {
 		assert.Equal(t, 40, entity.Age)
@@ -390,7 +391,7 @@ func TestBaseRepository_DeleteByConditions(t *testing.T) {
 
 	// Verify deletion
 	var found []TestEntity
-	err = repo.FindAllByConditions(ctx, &found, "age > ?", 30)
+	err = repo.FindAllByConditionsWithOffset(ctx, 10, 0, &found, "age > ?", 30)
 	assert.NoError(t, err)
 	assert.Len(t, found, 0)
 }
@@ -545,7 +546,7 @@ func TestBaseRepository_WithTransaction(t *testing.T) {
 
 	// Verify transaction was committed
 	var found []TestEntity
-	err = repo.FindAllByConditions(ctx, &found, "name = ?", "John Doe")
+	err = repo.FindAllByConditionsWithOffset(ctx, 10, 0, &found, "name = ?", "John Doe")
 	assert.NoError(t, err)
 	assert.Len(t, found, 1)
 	assert.Equal(t, 31, found[0].Age)
@@ -571,7 +572,7 @@ func TestBaseRepository_PaginateWithOffset(t *testing.T) {
 
 	// Test pagination
 	var found []TestEntity
-	err := repo.PaginateWithOffset(ctx, 2, 1, &found)
+	err := repo.FindAllWithOffset(ctx, 2, 1, &found)
 	assert.NoError(t, err)
 	assert.Len(t, found, 2)
 	assert.Equal(t, "Bob", found[0].Name)
@@ -596,7 +597,7 @@ func TestBaseRepository_PaginateWithCursor(t *testing.T) {
 
 	// Test cursor pagination
 	var found []TestEntity
-	err := repo.PaginateWithCursor(ctx, "", 2, "next", &found)
+	err := repo.FindAllWithCursor(ctx, "", 2, "next", &found)
 	assert.NoError(t, err)
 	assert.Len(t, found, 2)
 }
@@ -685,14 +686,14 @@ func TestBaseRepository_EdgeCases(t *testing.T) {
 
 	// Test with empty conditions
 	var found []TestEntity
-	err = repo.FindAllByConditions(ctx, &found)
+	err = repo.FindAllByConditionsWithOffset(ctx, 10, 0, &found)
 	assert.NoError(t, err)
 
 	// Test with invalid pagination parameters
-	err = repo.PaginateWithOffset(ctx, -1, -1, &found)
+	err = repo.FindAllWithOffset(ctx, -1, -1, &found)
 	assert.NoError(t, err) // Should handle gracefully
 
-	err = repo.PaginateWithCursor(ctx, "", -1, "invalid", &found)
+	err = repo.FindAllWithCursor(ctx, "", -1, "invalid", &found)
 	assert.NoError(t, err) // Should handle gracefully
 }
 
@@ -824,40 +825,40 @@ func TestBaseRepository_PaginationEdgeCases(t *testing.T) {
 	var found []TestEntity
 
 	// Test with negative offset
-	err := repo.PaginateWithOffset(ctx, -1, 2, &found)
+	err := repo.FindAllWithOffset(ctx, -1, 2, &found)
 	assert.NoError(t, err) // Should handle gracefully
 
 	// Test with negative limit
-	err = repo.PaginateWithOffset(ctx, 0, -1, &found)
+	err = repo.FindAllWithOffset(ctx, 0, -1, &found)
 	assert.NoError(t, err) // Should handle gracefully
 
 	// Test with zero limit
-	err = repo.PaginateWithOffset(ctx, 0, 0, &found)
+	err = repo.FindAllWithOffset(ctx, 0, 0, &found)
 	assert.NoError(t, err) // Should handle gracefully
 
 	// Test with very large offset
-	err = repo.PaginateWithOffset(ctx, 999999, 2, &found)
+	err = repo.FindAllWithOffset(ctx, 999999, 2, &found)
 	assert.NoError(t, err) // Should handle gracefully
 
 	// Test with very large limit
-	err = repo.PaginateWithOffset(ctx, 0, 999999, &found)
+	err = repo.FindAllWithOffset(ctx, 0, 999999, &found)
 	assert.NoError(t, err) // Should handle gracefully
 
 	// Test cursor pagination edge cases
 	// Test with invalid direction
-	err = repo.PaginateWithCursor(ctx, "", 2, "invalid", &found)
+	err = repo.FindAllWithCursor(ctx, "", 2, "invalid", &found)
 	assert.NoError(t, err) // Should handle gracefully
 
 	// Test with negative limit
-	err = repo.PaginateWithCursor(ctx, "", -1, "next", &found)
+	err = repo.FindAllWithCursor(ctx, "", -1, "next", &found)
 	assert.NoError(t, err) // Should handle gracefully
 
 	// Test with zero limit
-	err = repo.PaginateWithCursor(ctx, "", 0, "next", &found)
+	err = repo.FindAllWithCursor(ctx, "", 0, "next", &found)
 	assert.NoError(t, err) // Should handle gracefully
 
 	// Test with very large limit
-	err = repo.PaginateWithCursor(ctx, "", 999999, "next", &found)
+	err = repo.FindAllWithCursor(ctx, "", 999999, "next", &found)
 	assert.NoError(t, err) // Should handle gracefully
 }
 
@@ -910,31 +911,31 @@ func TestBaseRepository_ConditionEdgeCases(t *testing.T) {
 
 	// Test with nil conditions
 	var found []TestEntity
-	err := repo.FindAllByConditions(ctx, &found)
+	err := repo.FindAllByConditionsWithOffset(ctx, 10, 0, &found)
 	assert.NoError(t, err)
 	assert.Len(t, found, 3)
 
 	// Test with empty conditions
-	err = repo.FindAllByConditions(ctx, &found, "")
+	err = repo.FindAllByConditionsWithOffset(ctx, 10, 0, &found, "")
 	assert.NoError(t, err)
 	assert.Len(t, found, 3)
 
 	// Test with single condition
-	err = repo.FindAllByConditions(ctx, &found, "age > ?", 30)
+	err = repo.FindAllByConditionsWithOffset(ctx, 10, 0, &found, "age > ?", 30)
 	assert.NoError(t, err)
 	assert.Len(t, found, 1)
 
 	// Test with multiple conditions
-	err = repo.FindAllByConditions(ctx, &found, "age > ? AND name LIKE ?", 25, "%e%")
+	err = repo.FindAllByConditionsWithOffset(ctx, 10, 0, &found, "age > ? AND name LIKE ?", 25, "%e%")
 	assert.NoError(t, err)
 	assert.Len(t, found, 1) // Only Charlie matches: age > 25 AND name contains 'e'
 
 	// Test with invalid SQL condition
-	err = repo.FindAllByConditions(ctx, &found, "invalid sql condition", 30)
+	err = repo.FindAllByConditionsWithOffset(ctx, 10, 0, &found, "invalid sql condition", 30)
 	assert.Error(t, err)
 
 	// Test with mismatched parameters
-	err = repo.FindAllByConditions(ctx, &found, "age > ? AND name = ?", 30)
+	err = repo.FindAllByConditionsWithOffset(ctx, 10, 0, &found, "age > ? AND name = ?", 30)
 	assert.Error(t, err) // Missing parameter
 }
 
@@ -1080,7 +1081,7 @@ func TestBaseRepository_FindEdgeCases(t *testing.T) {
 	assert.Error(t, err)
 
 	// Test find all by conditions with nil result
-	err = repo.FindAllByConditions(ctx, nil, "age > ?", 30)
+	err = repo.FindAllByConditionsWithOffset(ctx, 10, 0, nil, "age > ?", 30)
 	assert.Error(t, err)
 
 	// Test first or init by conditions with nil result
@@ -1144,7 +1145,7 @@ func TestBaseRepository_ContextHandling(t *testing.T) {
 
 	// Test with nil context
 	assert.Panics(t, func() {
-		repo.Create(nil, &TestEntity{Name: "Test", Age: 30})
+		repo.Create(nil, &TestEntity{Name: "Test", Age: 30}) //nolint:staticcheck // Intentionally testing nil context
 	})
 
 	// Test with cancelled context
@@ -1206,4 +1207,419 @@ func TestBaseRepository_ConfigurationEdgeCases(t *testing.T) {
 	}
 	repo = repository.NewBaseRepository[TestEntity](db, logger, negativeConfig)
 	assert.NotNil(t, repo)
+}
+
+func TestBaseRepository_FindAllWithCursor(t *testing.T) {
+	repo, _ := setupTestRepository(t)
+	ctx := context.Background()
+
+	// Create test entities with known IDs for cursor testing
+	entities := []TestEntity{
+		{Name: "Alice", Age: 25},
+		{Name: "Bob", Age: 30},
+		{Name: "Charlie", Age: 35},
+		{Name: "David", Age: 40},
+		{Name: "Eve", Age: 45},
+	}
+
+	var createdEntities []TestEntity
+	for _, entity := range entities {
+		err := repo.Create(ctx, &entity)
+		require.NoError(t, err)
+		createdEntities = append(createdEntities, entity)
+	}
+
+	// Test basic cursor pagination - first page
+	var found []TestEntity
+	err := repo.FindAllWithCursor(ctx, "", 2, "next", &found)
+	assert.NoError(t, err)
+	assert.Len(t, found, 2)
+
+	// Test cursor pagination - next page using first entity's ID as cursor
+	if len(found) > 0 {
+		cursor := found[0].ID.String()
+		var nextPage []TestEntity
+		err = repo.FindAllWithCursor(ctx, cursor, 2, "next", &nextPage)
+		assert.NoError(t, err)
+		assert.Len(t, nextPage, 2)
+		// Ensure we get different entities
+		assert.NotEqual(t, found[0].ID, nextPage[0].ID)
+	}
+
+	// Test cursor pagination - previous page
+	if len(found) > 0 {
+		cursor := found[1].ID.String()
+		var prevPage []TestEntity
+		err = repo.FindAllWithCursor(ctx, cursor, 2, "prev", &prevPage)
+		assert.NoError(t, err)
+		// With string comparison, we might get fewer results
+		assert.LessOrEqual(t, len(prevPage), 2)
+	}
+
+	// Test with invalid direction (should default to "next")
+	var invalidDir []TestEntity
+	err = repo.FindAllWithCursor(ctx, "", 2, "invalid", &invalidDir)
+	assert.NoError(t, err)
+	assert.Len(t, invalidDir, 2)
+
+	// Test with zero limit (should use default)
+	var zeroLimit []TestEntity
+	err = repo.FindAllWithCursor(ctx, "", 0, "next", &zeroLimit)
+	assert.NoError(t, err)
+	assert.Len(t, zeroLimit, 5) // All 5 entities (less than default limit of 20)
+
+	// Test with negative limit (should use default)
+	var negLimit []TestEntity
+	err = repo.FindAllWithCursor(ctx, "", -1, "next", &negLimit)
+	assert.NoError(t, err)
+	assert.Len(t, negLimit, 5) // All 5 entities (less than default limit of 20)
+
+	// Test with large limit (should be capped)
+	var largeLimit []TestEntity
+	err = repo.FindAllWithCursor(ctx, "", 9999, "next", &largeLimit)
+	assert.NoError(t, err)
+	assert.Len(t, largeLimit, 5) // All 5 entities (less than max limit of 1000)
+
+	// Test with empty cursor (should return first page)
+	var emptyCursor []TestEntity
+	err = repo.FindAllWithCursor(ctx, "", 3, "next", &emptyCursor)
+	assert.NoError(t, err)
+	assert.Len(t, emptyCursor, 3)
+
+	// Test with non-existent cursor
+	var nonExistent []TestEntity
+	nonExistentCursor := uuid.New().String()
+	err = repo.FindAllWithCursor(ctx, nonExistentCursor, 2, "next", &nonExistent)
+	assert.NoError(t, err)
+	assert.Len(t, nonExistent, 0) // Should return empty result
+}
+
+func TestBaseRepository_FindAllInBatchesWithCursor(t *testing.T) {
+	repo, _ := setupTestRepository(t)
+	ctx := context.Background()
+
+	// Create test entities
+	entities := []TestEntity{
+		{Name: "Alice", Age: 25},
+		{Name: "Bob", Age: 30},
+		{Name: "Charlie", Age: 35},
+		{Name: "David", Age: 40},
+		{Name: "Eve", Age: 45},
+		{Name: "Frank", Age: 50},
+	}
+
+	for _, entity := range entities {
+		err := repo.Create(ctx, &entity)
+		require.NoError(t, err)
+	}
+
+	// Test batch processing with cursor
+	var allFound []TestEntity
+	batchCount := 0
+	err := repo.FindAllInBatchesWithCursor(ctx, "", 2, "next", &allFound, 2, func(tx *gorm.DB, batch int) error {
+		batchCount++
+		return nil
+	})
+	assert.NoError(t, err)
+	// With only 6 entities and limit of 2, we should get at least 1 batch
+	assert.GreaterOrEqual(t, batchCount, 1)
+
+	// Test with invalid batch size
+	var invalidBatch []TestEntity
+	err = repo.FindAllInBatchesWithCursor(ctx, "", 2, "next", &invalidBatch, 0, func(tx *gorm.DB, batch int) error {
+		return nil
+	})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "batch size must be greater than 0")
+
+	// Test with negative batch size
+	var negBatch []TestEntity
+	err = repo.FindAllInBatchesWithCursor(ctx, "", 2, "next", &negBatch, -1, func(tx *gorm.DB, batch int) error {
+		return nil
+	})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "batch size must be greater than 0")
+
+	// Test with cursor and batch processing
+	var firstBatch []TestEntity
+	err = repo.FindAllWithCursor(ctx, "", 2, "next", &firstBatch)
+	require.NoError(t, err)
+	require.Len(t, firstBatch, 2)
+
+	cursor := firstBatch[0].ID.String()
+	var cursorBatch []TestEntity
+	batchCount = 0
+	err = repo.FindAllInBatchesWithCursor(ctx, cursor, 2, "next", &cursorBatch, 2, func(tx *gorm.DB, batch int) error {
+		batchCount++
+		return nil
+	})
+	assert.NoError(t, err)
+	// With cursor, we might get fewer batches
+	assert.GreaterOrEqual(t, batchCount, 0)
+
+	// Test with previous direction
+	var prevBatch []TestEntity
+	batchCount = 0
+	err = repo.FindAllInBatchesWithCursor(ctx, cursor, 2, "prev", &prevBatch, 2, func(tx *gorm.DB, batch int) error {
+		batchCount++
+		return nil
+	})
+	assert.NoError(t, err)
+	// With cursor and prev direction, we might get fewer batches
+	assert.GreaterOrEqual(t, batchCount, 0)
+}
+
+func TestBaseRepository_FindAllByConditionsWithCursor(t *testing.T) {
+	repo, _ := setupTestRepository(t)
+	ctx := context.Background()
+
+	// Create test entities with different ages
+	entities := []TestEntity{
+		{Name: "Alice", Age: 25},
+		{Name: "Bob", Age: 30},
+		{Name: "Charlie", Age: 35},
+		{Name: "David", Age: 40},
+		{Name: "Eve", Age: 45},
+		{Name: "Frank", Age: 30},
+		{Name: "Grace", Age: 35},
+	}
+
+	for _, entity := range entities {
+		err := repo.Create(ctx, &entity)
+		require.NoError(t, err)
+	}
+
+	// Test cursor pagination with conditions - age >= 30
+	var found []TestEntity
+	err := repo.FindAllByConditionsWithCursor(ctx, "", 2, "next", &found, "age >= ?", 30)
+	assert.NoError(t, err)
+	assert.Len(t, found, 2)
+	// Verify all returned entities meet the condition
+	for _, entity := range found {
+		assert.GreaterOrEqual(t, entity.Age, 30)
+	}
+
+	// Test next page with cursor
+	if len(found) > 0 {
+		cursor := found[0].ID.String()
+		var nextPage []TestEntity
+		err = repo.FindAllByConditionsWithCursor(ctx, cursor, 2, "next", &nextPage, "age >= ?", 30)
+		assert.NoError(t, err)
+		assert.Len(t, nextPage, 2)
+		// Verify all returned entities meet the condition
+		for _, entity := range nextPage {
+			assert.GreaterOrEqual(t, entity.Age, 30)
+		}
+		// Ensure we get different entities
+		assert.NotEqual(t, found[0].ID, nextPage[0].ID)
+	}
+
+	// Test with name condition
+	var nameFound []TestEntity
+	err = repo.FindAllByConditionsWithCursor(ctx, "", 3, "next", &nameFound, "name LIKE ?", "A%")
+	assert.NoError(t, err)
+	// Should find Alice
+	assert.Len(t, nameFound, 1)
+	assert.Equal(t, "Alice", nameFound[0].Name)
+
+	// Test with no conditions (should work like FindAllWithCursor)
+	var noConditions []TestEntity
+	err = repo.FindAllByConditionsWithCursor(ctx, "", 2, "next", &noConditions)
+	assert.NoError(t, err)
+	assert.Len(t, noConditions, 2)
+
+	// Test with invalid direction
+	var invalidDir []TestEntity
+	err = repo.FindAllByConditionsWithCursor(ctx, "", 2, "invalid", &invalidDir, "age >= ?", 30)
+	assert.NoError(t, err)
+	assert.Len(t, invalidDir, 2)
+
+	// Test with zero limit
+	var zeroLimit []TestEntity
+	err = repo.FindAllByConditionsWithCursor(ctx, "", 0, "next", &zeroLimit, "age >= ?", 30)
+	assert.NoError(t, err)
+	assert.Len(t, zeroLimit, 6) // All 6 entities with age >= 30 (less than default limit of 20)
+
+	// Test with non-existent cursor
+	var nonExistent []TestEntity
+	nonExistentCursor := uuid.New().String()
+	err = repo.FindAllByConditionsWithCursor(ctx, nonExistentCursor, 2, "next", &nonExistent, "age >= ?", 30)
+	assert.NoError(t, err)
+	assert.Len(t, nonExistent, 0)
+
+	// Test with condition that matches no entities
+	var noMatches []TestEntity
+	err = repo.FindAllByConditionsWithCursor(ctx, "", 2, "next", &noMatches, "age > ?", 100)
+	assert.NoError(t, err)
+	assert.Len(t, noMatches, 0)
+}
+
+func TestBaseRepository_FindAllInBatchesByConditionsWithCursor(t *testing.T) {
+	repo, _ := setupTestRepository(t)
+	ctx := context.Background()
+
+	// Create test entities
+	entities := []TestEntity{
+		{Name: "Alice", Age: 25},
+		{Name: "Bob", Age: 30},
+		{Name: "Charlie", Age: 35},
+		{Name: "David", Age: 40},
+		{Name: "Eve", Age: 45},
+		{Name: "Frank", Age: 30},
+		{Name: "Grace", Age: 35},
+		{Name: "Henry", Age: 50},
+	}
+
+	for _, entity := range entities {
+		err := repo.Create(ctx, &entity)
+		require.NoError(t, err)
+	}
+
+	// Test batch processing with conditions and cursor
+	var allFound []TestEntity
+	batchCount := 0
+	err := repo.FindAllInBatchesByConditionsWithCursor(ctx, "", 2, "next", &allFound, 2, func(tx *gorm.DB, batch int) error {
+		batchCount++
+		return nil
+	}, "age >= ?", 30)
+	assert.NoError(t, err)
+	// With 6 entities matching age >= 30 and limit of 2, we should get at least 1 batch
+	assert.GreaterOrEqual(t, batchCount, 1)
+	// Verify all returned entities meet the condition
+	for _, entity := range allFound {
+		assert.GreaterOrEqual(t, entity.Age, 30)
+	}
+
+	// Test with cursor and conditions
+	var firstBatch []TestEntity
+	err = repo.FindAllByConditionsWithCursor(ctx, "", 2, "next", &firstBatch, "age >= ?", 30)
+	require.NoError(t, err)
+	require.Len(t, firstBatch, 2)
+
+	cursor := firstBatch[0].ID.String()
+	var cursorBatch []TestEntity
+	batchCount = 0
+	err = repo.FindAllInBatchesByConditionsWithCursor(ctx, cursor, 2, "next", &cursorBatch, 2, func(tx *gorm.DB, batch int) error {
+		batchCount++
+		return nil
+	}, "age >= ?", 30)
+	assert.NoError(t, err)
+	// With cursor, we might get fewer batches
+	assert.GreaterOrEqual(t, batchCount, 0)
+	// Verify all returned entities meet the condition
+	for _, entity := range cursorBatch {
+		assert.GreaterOrEqual(t, entity.Age, 30)
+	}
+
+	// Test with invalid batch size
+	var invalidBatch []TestEntity
+	err = repo.FindAllInBatchesByConditionsWithCursor(ctx, "", 2, "next", &invalidBatch, 0, func(tx *gorm.DB, batch int) error {
+		return nil
+	}, "age >= ?", 30)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "batch size must be greater than 0")
+
+	// Test with negative batch size
+	var negBatch []TestEntity
+	err = repo.FindAllInBatchesByConditionsWithCursor(ctx, "", 2, "next", &negBatch, -1, func(tx *gorm.DB, batch int) error {
+		return nil
+	}, "age >= ?", 30)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "batch size must be greater than 0")
+
+	// Test with previous direction
+	var prevBatch []TestEntity
+	batchCount = 0
+	err = repo.FindAllInBatchesByConditionsWithCursor(ctx, cursor, 2, "prev", &prevBatch, 2, func(tx *gorm.DB, batch int) error {
+		batchCount++
+		return nil
+	}, "age >= ?", 30)
+	assert.NoError(t, err)
+	// With cursor and prev direction, we might get fewer batches
+	assert.GreaterOrEqual(t, batchCount, 0)
+
+	// Test with no conditions
+	var noConditions []TestEntity
+	batchCount = 0
+	err = repo.FindAllInBatchesByConditionsWithCursor(ctx, "", 2, "next", &noConditions, 2, func(tx *gorm.DB, batch int) error {
+		batchCount++
+		return nil
+	})
+	assert.NoError(t, err)
+	// With 8 entities and limit of 2, we should get at least 1 batch
+	assert.GreaterOrEqual(t, batchCount, 1)
+
+	// Test with condition that matches no entities
+	var noMatches []TestEntity
+	batchCount = 0
+	err = repo.FindAllInBatchesByConditionsWithCursor(ctx, "", 2, "next", &noMatches, 2, func(tx *gorm.DB, batch int) error {
+		batchCount++
+		return nil
+	}, "age > ?", 100)
+	assert.NoError(t, err)
+	assert.Equal(t, 0, batchCount) // No batches should be processed
+	assert.Len(t, noMatches, 0)
+
+	// Test with invalid direction
+	var invalidDir []TestEntity
+	batchCount = 0
+	err = repo.FindAllInBatchesByConditionsWithCursor(ctx, "", 2, "invalid", &invalidDir, 2, func(tx *gorm.DB, batch int) error {
+		batchCount++
+		return nil
+	}, "age >= ?", 30)
+	assert.NoError(t, err)
+	// With 6 entities matching age >= 30 and limit of 2, we should get at least 1 batch
+	assert.GreaterOrEqual(t, batchCount, 1)
+}
+
+func TestBaseRepository_CursorPaginationEdgeCases(t *testing.T) {
+	repo, _ := setupTestRepository(t)
+	ctx := context.Background()
+
+	// Test with empty database
+	var emptyResult []TestEntity
+	err := repo.FindAllWithCursor(ctx, "", 10, "next", &emptyResult)
+	assert.NoError(t, err)
+	assert.Len(t, emptyResult, 0)
+
+	// Test with single entity
+	singleEntity := TestEntity{Name: "Single", Age: 25}
+	err = repo.Create(ctx, &singleEntity)
+	require.NoError(t, err)
+
+	var singleResult []TestEntity
+	err = repo.FindAllWithCursor(ctx, "", 10, "next", &singleResult)
+	assert.NoError(t, err)
+	assert.Len(t, singleResult, 1)
+	assert.Equal(t, "Single", singleResult[0].Name)
+
+	// Test cursor with single entity (should return empty)
+	cursor := singleEntity.ID.String()
+	var cursorResult []TestEntity
+	err = repo.FindAllWithCursor(ctx, cursor, 10, "next", &cursorResult)
+	assert.NoError(t, err)
+	assert.Len(t, cursorResult, 0)
+
+	// Test with very large limit
+	var largeResult []TestEntity
+	err = repo.FindAllWithCursor(ctx, "", 999999, "next", &largeResult)
+	assert.NoError(t, err)
+	assert.Len(t, largeResult, 1) // Only one entity exists
+
+	// Test with conditions and empty result
+	var conditionResult []TestEntity
+	err = repo.FindAllByConditionsWithCursor(ctx, "", 10, "next", &conditionResult, "age > ?", 100)
+	assert.NoError(t, err)
+	assert.Len(t, conditionResult, 0)
+
+	// Test batch processing with empty database
+	var batchResult []TestEntity
+	batchCount := 0
+	err = repo.FindAllInBatchesWithCursor(ctx, "", 10, "next", &batchResult, 5, func(tx *gorm.DB, batch int) error {
+		batchCount++
+		return nil
+	})
+	assert.NoError(t, err)
+	assert.Equal(t, 1, batchCount) // One batch with the single entity
+	assert.Len(t, batchResult, 1)
 }

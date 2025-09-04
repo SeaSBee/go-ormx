@@ -127,7 +127,6 @@ func TestDatabaseConfig_Validate(t *testing.T) {
 				EnableQueryLogging:  false,
 				MaskSensitiveData:   true,
 				Pagination: &config.PaginationConfig{
-					Type:         config.PaginationTypeOffset,
 					DefaultLimit: 20,
 					MaxLimit:     100,
 					MinLimit:     1,
@@ -658,7 +657,6 @@ func TestDatabaseConfig_DefaultDatabaseConfig(t *testing.T) {
 
 	// Test pagination configuration
 	assert.NotNil(t, dbConfig.Pagination)
-	assert.Equal(t, config.PaginationTypeOffset, dbConfig.Pagination.Type)
 	assert.Equal(t, 20, dbConfig.Pagination.DefaultLimit)
 	assert.Equal(t, 100, dbConfig.Pagination.MaxLimit)
 	assert.Equal(t, 1, dbConfig.Pagination.MinLimit)
@@ -753,7 +751,6 @@ func TestPaginationConfig_Validation(t *testing.T) {
 		{
 			name: "valid pagination config",
 			config: config.PaginationConfig{
-				Type:         config.PaginationTypeOffset,
 				DefaultLimit: 20,
 				MaxLimit:     100,
 				MinLimit:     1,
@@ -763,7 +760,6 @@ func TestPaginationConfig_Validation(t *testing.T) {
 		{
 			name: "cursor pagination config",
 			config: config.PaginationConfig{
-				Type:         config.PaginationTypeCursor,
 				DefaultLimit: 50,
 				MaxLimit:     200,
 				MinLimit:     10,
@@ -776,14 +772,8 @@ func TestPaginationConfig_Validation(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Note: Actual validation is done in DatabaseConfig.Validate()
 			// This test just ensures the struct can be created
-			assert.Equal(t, tt.config.Type, tt.config.Type)
 		})
 	}
-}
-
-func TestPaginationType_Constants(t *testing.T) {
-	assert.Equal(t, "offset", string(config.PaginationTypeOffset))
-	assert.Equal(t, "cursor", string(config.PaginationTypeCursor))
 }
 
 // Add missing test scenarios

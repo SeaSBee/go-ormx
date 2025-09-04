@@ -69,7 +69,7 @@ func (r *UserRepository) FindByEmail(ctx context.Context, email string) (*Exampl
 // FindActiveUsers finds all active users
 func (r *UserRepository) FindActiveUsers(ctx context.Context) ([]ExampleUser, error) {
 	var users []ExampleUser
-	if err := r.FindAllByConditions(ctx, &users, "is_active = ?", true); err != nil {
+	if err := r.FindAllByConditionsWithOffset(ctx, 10, 0, &users, "is_active = ?", true); err != nil {
 		return nil, fmt.Errorf("failed to find active users: %w", err)
 	}
 	return users, nil
@@ -548,7 +548,7 @@ func (cm *ConnectionManager) demonstrateAdvancedRepositoryOperations(ctx context
 
 	// Demonstrate pagination
 	var paginatedUsers []ExampleUser
-	if err := cm.userRepo.PaginateWithOffset(ctx, 5, 0, &paginatedUsers); err != nil {
+	if err := cm.userRepo.FindAllWithOffset(ctx, 5, 0, &paginatedUsers); err != nil {
 		cm.logger.Error(ctx, "Pagination failed", logging.ErrorField("error", err))
 		return fmt.Errorf("pagination failed: %w", err)
 	}

@@ -60,7 +60,6 @@ func createValidTestConfig() *config.DatabaseConfig {
 			RecoveryTime: 1 * time.Minute,
 		},
 		Pagination: &config.PaginationConfig{
-			Type:         config.PaginationTypeOffset,
 			DefaultLimit: 20,
 			MaxLimit:     100,
 			MinLimit:     1,
@@ -128,7 +127,6 @@ func TestNewConnectionManager(t *testing.T) {
 					RecoveryTime: 1 * time.Minute,
 				},
 				Pagination: &config.PaginationConfig{
-					Type:         config.PaginationTypeOffset,
 					DefaultLimit: 20,
 					MaxLimit:     100,
 					MinLimit:     1,

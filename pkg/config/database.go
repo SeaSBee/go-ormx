@@ -127,19 +127,10 @@ type ObservabilityConfig struct {
 
 // PaginationConfig represents pagination configuration
 type PaginationConfig struct {
-	Type         PaginationType `yaml:"type" json:"type" validate:"required,oneof=offset cursor,max=10"`
-	DefaultLimit int            `yaml:"default_limit" json:"default_limit" validate:"required,min=1,max=1000"`
-	MaxLimit     int            `yaml:"max_limit" json:"max_limit" validate:"required,min=1,max=10000"`
-	MinLimit     int            `yaml:"min_limit" json:"min_limit" validate:"required,min=1,max=1000"`
+	DefaultLimit int `yaml:"default_limit" json:"default_limit" validate:"required,min=1,max=1000"`
+	MaxLimit     int `yaml:"max_limit" json:"max_limit" validate:"required,min=1,max=1000"`
+	MinLimit     int `yaml:"min_limit" json:"min_limit" validate:"required,min=1,max=1000"`
 }
-
-// PaginationType represents the type of pagination
-type PaginationType string
-
-const (
-	PaginationTypeOffset PaginationType = "offset"
-	PaginationTypeCursor PaginationType = "cursor"
-)
 
 // ConnectionString returns the database connection string
 func (c *DatabaseConfig) ConnectionString() string {
@@ -587,7 +578,6 @@ func DefaultDatabaseConfig() *DatabaseConfig {
 
 		// Pagination Configuration
 		Pagination: &PaginationConfig{
-			Type:         PaginationTypeOffset,
 			DefaultLimit: 20,
 			MaxLimit:     100,
 			MinLimit:     1,
