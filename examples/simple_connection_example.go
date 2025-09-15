@@ -12,9 +12,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/seasbee/go-ormx/pkg/logging"
-	"github.com/seasbee/go-ormx/pkg/models"
-	"github.com/seasbee/go-ormx/pkg/repository"
+	"github.com/SeaSBee/go-ormx/pkg/logging"
+	"github.com/SeaSBee/go-ormx/pkg/models"
+	"github.com/SeaSBee/go-ormx/pkg/repository"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"

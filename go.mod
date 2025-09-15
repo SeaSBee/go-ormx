@@ -1,4 +1,4 @@
-module github.com/seasbee/go-ormx
+module github.com/SeaSBee/go-ormx
 
 go 1.24.5
 
@@ -6,8 +6,8 @@ go 1.24.5
 require github.com/google/uuid v1.6.0
 
 require (
+	github.com/SeaSBee/go-validatorx v1.0.0
 	github.com/pkg/errors v0.9.1
-	github.com/seasbee/go-validatorx v0.0.0-20250903060202-54de2398ca2a
 	github.com/stretchr/testify v1.11.1
 	gorm.io/driver/mysql v1.6.0
 	gorm.io/driver/postgres v1.6.0
@@ -33,11 +33,4 @@ require (
 	golang.org/x/sync v0.10.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-)
-
-// Replace directives for local development
-replace (
-	github.com/seasbee/go-cachex => ../go-cachex
-	github.com/seasbee/go-logx => ../go-logx
-	github.com/seasbee/go-validatorx => ../go-validatorx
 )

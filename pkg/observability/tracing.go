@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/seasbee/go-ormx/pkg/logging"
+	"github.com/SeaSBee/go-ormx/pkg/logging"
 )
 
 // TraceID represents a unique trace identifier

@@ -10,7 +10,7 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
-	"github.com/seasbee/go-ormx/pkg/models"
+	"github.com/SeaSBee/go-ormx/pkg/models"
 )
 
 // TestEntity represents a test entity for integration testing

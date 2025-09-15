@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/seasbee/go-ormx/pkg/logging"
-	"github.com/seasbee/go-ormx/pkg/models"
-	"github.com/seasbee/go-ormx/pkg/repository"
+	"github.com/SeaSBee/go-ormx/pkg/logging"
+	"github.com/SeaSBee/go-ormx/pkg/models"
+	"github.com/SeaSBee/go-ormx/pkg/repository"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gorm.io/driver/sqlite"

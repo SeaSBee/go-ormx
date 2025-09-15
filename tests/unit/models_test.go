@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/seasbee/go-ormx/pkg/models"
-	"github.com/seasbee/go-ormx/pkg/utils"
+	"github.com/SeaSBee/go-ormx/pkg/models"
+	"github.com/SeaSBee/go-ormx/pkg/utils"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
 )

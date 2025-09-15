@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/seasbee/go-ormx/pkg/utils"
+	"github.com/SeaSBee/go-ormx/pkg/utils"
 )
 
 func TestGenerateUUIDv7(t *testing.T) {
