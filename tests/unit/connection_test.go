@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/SeaSBee/go-ormx/pkg/config"
-	"github.com/SeaSBee/go-ormx/pkg/database"
+	"github.com/seasbee/go-ormx/pkg/config"
+	"github.com/seasbee/go-ormx/pkg/database"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"

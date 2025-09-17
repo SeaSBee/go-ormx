@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/SeaSBee/go-ormx/pkg/utils"
+	"github.com/seasbee/go-ormx/pkg/utils"
 	"gorm.io/gorm"
 )
 

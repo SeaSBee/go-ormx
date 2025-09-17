@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/SeaSBee/go-ormx/pkg/errors"
-	"github.com/SeaSBee/go-ormx/pkg/logging"
+	"github.com/seasbee/go-ormx/pkg/errors"
+	"github.com/seasbee/go-ormx/pkg/logging"
 )
 
 // MetricType represents the type of metric

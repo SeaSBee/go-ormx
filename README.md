@@ -20,7 +20,7 @@ A comprehensive Go ORMX library with advanced features including configurable co
 ### Installation
 
 ```bash
-go get github.com/SeaSBee/go-ormx
+go get github.com/seasbee/go-ormx
 ```
 
 ### Basic Usage
@@ -32,10 +32,10 @@ import (
     "context"
     "time"
     
-    "github.com/SeaSBee/go-ormx/pkg/config"
-    "github.com/SeaSBee/go-ormx/pkg/database"
-    "github.com/SeaSBee/go-ormx/pkg/repository"
-    "github.com/SeaSBee/go-ormx/pkg/models"
+    "github.com/seasbee/go-ormx/pkg/config"
+    "github.com/seasbee/go-ormx/pkg/database"
+    "github.com/seasbee/go-ormx/pkg/repository"
+    "github.com/seasbee/go-ormx/pkg/models"
 )
 
 // Define your entity

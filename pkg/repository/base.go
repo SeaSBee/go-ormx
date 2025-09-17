@@ -7,10 +7,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/SeaSBee/go-ormx/pkg/errors"
-	"github.com/SeaSBee/go-ormx/pkg/logging"
-	"github.com/SeaSBee/go-validatorx"
 	"github.com/google/uuid"
+	"github.com/seasbee/go-ormx/pkg/errors"
+	"github.com/seasbee/go-ormx/pkg/logging"
+	"github.com/seasbee/go-validatorx"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )

@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/SeaSBee/go-ormx/pkg/logging"
-	"github.com/SeaSBee/go-ormx/pkg/observability"
+	"github.com/seasbee/go-ormx/pkg/logging"
+	"github.com/seasbee/go-ormx/pkg/observability"
 	"github.com/stretchr/testify/assert"
 )
 

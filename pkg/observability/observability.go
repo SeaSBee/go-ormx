@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/SeaSBee/go-ormx/pkg/logging"
+	"github.com/seasbee/go-ormx/pkg/logging"
 )
 
 // ObservabilityConfig represents observability configuration
