@@ -1,0 +1,139 @@
+# Database Configuration for go-ormx
+# This configuration file supports PostgreSQL, MySQL, SQLite, and SQL Server
+
+# Basic connection settings
+driver: postgres                    # Database driver: postgres, mysql, sqlite, sqlserver
+host: localhost                     # Database host
+port: 5432                          # Database port (1-65535)
+database: ormx                      # Database name (1-64 characters)
+username: postgres                  # Database username (1-32 characters)
+password: password                  # Database password (1-128 characters)
+ssl_mode: disable                   # SSL mode: disable, require, verify-ca, verify-full
+
+# Connection Pool Configuration
+max_connections: 100                # Maximum number of connections (1-10000)
+min_connections: 10                 # Minimum number of connections (0-1000)
+max_idle_connections: 20            # Maximum idle connections (0-1000)
+max_lifetime: 1h                    # Maximum connection lifetime (1m-12h)
+idle_timeout: 5m                    # Idle connection timeout (30s-1h)
+acquire_timeout: 10s                # Connection acquire timeout (1s-30s)
+leak_detection: true                # Enable connection leak detection
+leak_timeout: 1m                    # Leak detection timeout (1s-5m)
+
+# Timeout Configuration
+connection_timeout: 10s             # Connection timeout (1s-30s)
+query_timeout: 30s                  # Query timeout (100ms-5m)
+transaction_timeout: 5m             # Transaction timeout (1s-10m)
+statement_timeout: 1s               # Statement timeout (100ms-1m)
+cancel_timeout: 5s                  # Cancel timeout (100ms-30s)
+
+# Retry Configuration
+retry:
+  enabled: true                     # Enable retry mechanism
+  max_attempts: 3                   # Maximum retry attempts (1-10)
+  initial_delay: 1s                 # Initial retry delay (100ms-30s)
+  max_delay: 30s                    # Maximum retry delay (1s-5m)
+  backoff_multiplier: 2.0           # Backoff multiplier (1.0-5.0)
+  jitter: true                      # Enable jitter for retry delays
+  retryable_errors:                 # List of retryable error patterns
+    - "connection refused"
+    - "connection reset"
+    - "timeout"
+    - "deadlock"
+  non_retryable_errors:             # List of non-retryable error patterns
+    - "syntax error"
+    - "permission denied"
+    - "table not found"
+
+# Health Check Configuration
+health_check:
+  enabled: true                     # Enable health checks
+  interval: 30s                     # Health check interval (5s-5m)
+  timeout: 5s                       # Health check timeout (1s-30s)
+  query: "SELECT 1"                 # Health check query (1-1000 characters)
+  max_failures: 3                   # Maximum consecutive failures (1-10)
+  recovery_time: 1m                 # Recovery time after failure (1s-10m)
+
+# Logging Configuration
+log_level: info                     # Log level: debug, info, warn, error, fatal
+log_format: json                    # Log format: json, text
+log_fields:                         # Additional log fields
+  service: "go-ormx"
+  version: "1.0.0"
+  environment: "development"
+
+# Observability Configuration
+metrics: true                       # Enable metrics collection
+tracing: true                       # Enable distributed tracing
+health_check_interval: 30s          # Global health check interval (5s-5m)
+
+# Security Configuration
+max_query_size: 65536               # Maximum query size in bytes (1KB-1MB)
+max_result_size: 100000             # Maximum result size in bytes (1KB-1MB)
+enable_query_logging: false         # Enable query logging (true/false)
+mask_sensitive_data: true           # Mask sensitive data in logs (true/false)
+
+# Pagination Configuration
+pagination:
+  default_limit: 20                 # Default pagination limit (1-1000)
+  max_limit: 100                    # Maximum pagination limit (1-1000)
+  min_limit: 1                      # Minimum pagination limit (1-1000)
+
+# Encryption Configuration (Optional)
+encryption:
+  enabled: true                     # Enable encryption
+  algorithm: aes-256-gcm            # Encryption algorithm: aes-256-gcm, aes-256-cbc, chacha20-poly1305
+
+# Read Replicas Configuration (Optional)
+# Configure read replicas for load balancing and high availability
+read_replicas:
+  # Example read replica configuration
+  # - host: replica1.example.com
+  #   port: 5432
+  #   database: ormx_readonly        # Optional: inherits from main config if not specified
+  #   username: readonly_user        # Optional: inherits from main config if not specified
+  #   password: readonly_password    # Optional: inherits from main config if not specified
+  #   ssl_mode: require              # Optional: inherits from main config if not specified
+  #   weight: 50                     # Load balancing weight (1-100)
+  #   max_latency: 100ms             # Maximum acceptable latency (1ms-5s)
+  #   enabled: true                  # Whether this replica is enabled
+  #   # Connection pool overrides (optional)
+  #   max_connections: 50
+  #   min_connections: 5
+  #   max_idle_connections: 10
+  #   max_lifetime: 1h
+  #   idle_timeout: 5m
+
+# Example configurations for different database types:
+
+# PostgreSQL Configuration Example:
+# driver: postgres
+# host: localhost
+# port: 5432
+# database: myapp
+# username: postgres
+# password: secret
+# ssl_mode: require
+
+# MySQL Configuration Example:
+# driver: mysql
+# host: localhost
+# port: 3306
+# database: myapp
+# username: root
+# password: secret
+# ssl_mode: disable
+
+# SQLite Configuration Example:
+# driver: sqlite
+# database: /path/to/database.db
+# # Note: host, port, username, password, ssl_mode are not used for SQLite
+
+# SQL Server Configuration Example:
+# driver: sqlserver
+# host: localhost
+# port: 1433
+# database: myapp
+# username: sa
+# password: secret
+# ssl_mode: disable
