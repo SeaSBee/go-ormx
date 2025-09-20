@@ -8,30 +8,30 @@ import (
 // DatabaseConfig represents comprehensive database configuration with connection pooling and timeout support
 type DatabaseConfig struct {
 	// Basic connection settings
-	Driver   string `yaml:"driver" json:"driver" validate:"required,oneof=postgres mysql sqlite sqlserver,max=20"`
-	Host     string `yaml:"host" json:"host" validate:"required,hostname,max=255"`
-	Port     int    `yaml:"port" json:"port" validate:"required,min=1,max=65535"`
-	Database string `yaml:"database" json:"database" validate:"required,min=1,max=64"`
-	Username string `yaml:"username" json:"username" validate:"required,min=1,max=32"`
-	Password string `yaml:"password" json:"password" validate:"required,min=1,max=128"`
-	SSLMode  string `yaml:"ssl_mode" json:"ssl_mode" validate:"oneof=disable require verify-ca verify-full,max=20"`
+	Driver   string `yaml:"driver" json:"driver" validate:"required,oneof=postgres mysql sqlite sqlserver,max=20" default:"postgres"`
+	Host     string `yaml:"host" json:"host" validate:"required,hostname,max=255" default:"localhost"`
+	Port     int    `yaml:"port" json:"port" validate:"required,min=1,max=65535" default:"5432"`
+	Database string `yaml:"database" json:"database" validate:"required,min=1,max=64" default:"ormx"`
+	Username string `yaml:"username" json:"username" validate:"required,min=1,max=32" default:"postgres"`
+	Password string `yaml:"password" json:"password" validate:"required,min=1,max=128" default:"password"`
+	SSLMode  string `yaml:"ssl_mode" json:"ssl_mode" validate:"oneof=disable require verify-ca verify-full,max=20" default:"disable"`
 
 	// Connection Pool Configuration
-	MaxConnections     int           `yaml:"max_connections" json:"max_connections" validate:"required,min=1,max=10000"`
-	MinConnections     int           `yaml:"min_connections" json:"min_connections" validate:"required,min=0,max=1000"`
-	MaxIdleConnections int           `yaml:"max_idle_connections" json:"max_idle_connections" validate:"required,min=0,max=1000"`
-	MaxLifetime        time.Duration `yaml:"max_lifetime" json:"max_lifetime" validate:"required,min=1m,max=12h,default=1h"`
-	IdleTimeout        time.Duration `yaml:"idle_timeout" json:"idle_timeout" validate:"required,min=30s,max=1h,default=5m"`
-	AcquireTimeout     time.Duration `yaml:"acquire_timeout" json:"acquire_timeout" validate:"required,min=1s,max=30s,default=10s"`
-	LeakDetection      bool          `yaml:"leak_detection" json:"leak_detection"`
-	LeakTimeout        time.Duration `yaml:"leak_timeout" json:"leak_timeout" validate:"omitempty,min=1s,max=5m,default=1m"`
+	MaxConnections     int           `yaml:"max_connections" json:"max_connections" validate:"required,min=1,max=10000" default:"100"`
+	MinConnections     int           `yaml:"min_connections" json:"min_connections" validate:"required,min=0,max=1000" default:"10"`
+	MaxIdleConnections int           `yaml:"max_idle_connections" json:"max_idle_connections" validate:"required,min=0,max=1000" default:"20"`
+	MaxLifetime        time.Duration `yaml:"max_lifetime" json:"max_lifetime" validate:"required,min=1m,max=12h" default:"1h"`
+	IdleTimeout        time.Duration `yaml:"idle_timeout" json:"idle_timeout" validate:"required,min=30s,max=1h" default:"5m"`
+	AcquireTimeout     time.Duration `yaml:"acquire_timeout" json:"acquire_timeout" validate:"required,min=1s,max=30s" default:"10s"`
+	LeakDetection      bool          `yaml:"leak_detection" json:"leak_detection" default:"true"`
+	LeakTimeout        time.Duration `yaml:"leak_timeout" json:"leak_timeout" validate:"omitempty,min=1s,max=5m" default:"1m"`
 
 	// Timeout Configuration
-	ConnectionTimeout  time.Duration `yaml:"connection_timeout" json:"connection_timeout" validate:"required,min=1s,max=30s,default=10s"`
-	QueryTimeout       time.Duration `yaml:"query_timeout" json:"query_timeout" validate:"required,min=100ms,max=5m,default=30s"`
-	TransactionTimeout time.Duration `yaml:"transaction_timeout" json:"transaction_timeout" validate:"required,min=1s,max=10m,default=5m"`
-	StatementTimeout   time.Duration `yaml:"statement_timeout" json:"statement_timeout" validate:"required,min=100ms,max=1m,default=1s"`
-	CancelTimeout      time.Duration `yaml:"cancel_timeout" json:"cancel_timeout" validate:"required,min=100ms,max=30s,default=5s"`
+	ConnectionTimeout  time.Duration `yaml:"connection_timeout" json:"connection_timeout" validate:"required,min=1s,max=30s" default:"10s"`
+	QueryTimeout       time.Duration `yaml:"query_timeout" json:"query_timeout" validate:"required,min=100ms,max=5m" default:"30s"`
+	TransactionTimeout time.Duration `yaml:"transaction_timeout" json:"transaction_timeout" validate:"required,min=1s,max=10m" default:"5m"`
+	StatementTimeout   time.Duration `yaml:"statement_timeout" json:"statement_timeout" validate:"required,min=100ms,max=1m" default:"1s"`
+	CancelTimeout      time.Duration `yaml:"cancel_timeout" json:"cancel_timeout" validate:"required,min=100ms,max=30s" default:"5s"`
 
 	// Retry Configuration
 	Retry RetryConfig `yaml:"retry" json:"retry" validate:"required"`
@@ -40,20 +40,20 @@ type DatabaseConfig struct {
 	HealthCheck HealthCheckConfig `yaml:"health_check" json:"health_check" validate:"required"`
 
 	// Logging Configuration
-	LogLevel  string            `yaml:"log_level" json:"log_level" validate:"required,oneof=debug info warn error fatal,max=10"`
-	LogFormat string            `yaml:"log_format" json:"log_format" validate:"required,oneof=json text,max=1000"`
+	LogLevel  string            `yaml:"log_level" json:"log_level" validate:"required,oneof=debug info warn error fatal,max=10" default:"info"`
+	LogFormat string            `yaml:"log_format" json:"log_format" validate:"required,oneof=json text,max=10" default:"json"`
 	LogFields map[string]string `yaml:"log_fields" json:"log_fields" validate:"omitempty,max=500"`
 
 	// Observability Configuration
-	Metrics             bool          `yaml:"metrics" json:"metrics"`
-	Tracing             bool          `yaml:"tracing" json:"tracing"`
-	HealthCheckInterval time.Duration `yaml:"health_check_interval" json:"health_check_interval" validate:"required,min=5s,max=5m,default=30s"`
+	Metrics             bool          `yaml:"metrics" json:"metrics" default:"true"`
+	Tracing             bool          `yaml:"tracing" json:"tracing" default:"true"`
+	HealthCheckInterval time.Duration `yaml:"health_check_interval" json:"health_check_interval" validate:"required,min=5s,max=5m" default:"30s"`
 
 	// Security Configuration
-	MaxQuerySize       int  `yaml:"max_query_size" json:"max_query_size" validate:"required,min=1024,max=1048576"`
-	MaxResultSize      int  `yaml:"max_result_size" json:"max_result_size" validate:"required,min=1000,max=1000000"`
-	EnableQueryLogging bool `yaml:"enable_query_logging" json:"enable_query_logging" validate:"required,oneof=true false,default=true"`
-	MaskSensitiveData  bool `yaml:"mask_sensitive_data" json:"mask_sensitive_data" validate:"required,oneof=true false,default=true"`
+	MaxQuerySize       int  `yaml:"max_query_size" json:"max_query_size" validate:"required,min=1024,max=1048576" default:"65536"`
+	MaxResultSize      int  `yaml:"max_result_size" json:"max_result_size" validate:"required,min=1000,max=1000000" default:"100000"`
+	EnableQueryLogging bool `yaml:"enable_query_logging" json:"enable_query_logging" default:"false"`
+	MaskSensitiveData  bool `yaml:"mask_sensitive_data" json:"mask_sensitive_data" default:"true"`
 
 	// Pagination Configuration
 	Pagination *PaginationConfig `yaml:"pagination" json:"pagination" validate:"required"`
@@ -67,31 +67,31 @@ type DatabaseConfig struct {
 
 // RetryConfig represents retry configuration
 type RetryConfig struct {
-	Enabled            bool          `yaml:"enabled" json:"enabled"`
-	MaxAttempts        int           `yaml:"max_attempts" json:"max_attempts" validate:"required_if=Enabled true,min=1,max=10"`
-	InitialDelay       time.Duration `yaml:"initial_delay" json:"initial_delay" validate:"required_if=Enabled true,min=100ms,max=30s,default=1s"`
-	MaxDelay           time.Duration `yaml:"max_delay" json:"max_delay" validate:"required_if=Enabled true,min=1s,max=5m,default=30s"`
-	BackoffMultiplier  float64       `yaml:"backoff_multiplier" json:"backoff_multiplier" validate:"required_if=Enabled true,min=1.0,max=5.0"`
-	Jitter             bool          `yaml:"jitter" json:"jitter"`
-	RetryableErrors    []string      `yaml:"retryable_errors" json:"retryable_errors" validate:"omitempty,dive,min=1,max=50,max=20"`
-	NonRetryableErrors []string      `yaml:"non_retryable_errors" json:"non_retryable_errors" validate:"omitempty,dive,min=1,max=50,max=20"`
+	Enabled            bool          `yaml:"enabled" json:"enabled" default:"true"`
+	MaxAttempts        int           `yaml:"max_attempts" json:"max_attempts" validate:"required_if=Enabled true,min=1,max=10" default:"3"`
+	InitialDelay       time.Duration `yaml:"initial_delay" json:"initial_delay" validate:"required_if=Enabled true,min=100ms,max=30s" default:"1s"`
+	MaxDelay           time.Duration `yaml:"max_delay" json:"max_delay" validate:"required_if=Enabled true,min=1s,max=5m" default:"30s"`
+	BackoffMultiplier  float64       `yaml:"backoff_multiplier" json:"backoff_multiplier" validate:"required_if=Enabled true,min=1.0,max=5.0" default:"2.0"`
+	Jitter             bool          `yaml:"jitter" json:"jitter" default:"true"`
+	RetryableErrors    []string      `yaml:"retryable_errors" json:"retryable_errors" validate:"omitempty,dive,min=1,max=50"`
+	NonRetryableErrors []string      `yaml:"non_retryable_errors" json:"non_retryable_errors" validate:"omitempty,dive,min=1,max=50"`
 }
 
 // HealthCheckConfig represents health check configuration
 type HealthCheckConfig struct {
-	Enabled      bool          `yaml:"enabled" json:"enabled"`
-	Interval     time.Duration `yaml:"interval" json:"interval" validate:"required_if=Enabled true,min=5s,max=5m,default=30s"`
-	Timeout      time.Duration `yaml:"timeout" json:"timeout" validate:"required_if=Enabled true,min=1s,max=30s,default=5s"`
-	Query        string        `yaml:"query" json:"query" validate:"required_if=Enabled true,min=1,max=1000"`
-	MaxFailures  int           `yaml:"max_failures" json:"max_failures" validate:"required_if=Enabled true,min=1,max=10"`
-	RecoveryTime time.Duration `yaml:"recovery_time" json:"recovery_time" validate:"required_if=Enabled true,min=1s,max=10m,default=1m"`
+	Enabled      bool          `yaml:"enabled" json:"enabled" default:"true"`
+	Interval     time.Duration `yaml:"interval" json:"interval" validate:"required_if=Enabled true,min=5s,max=5m" default:"30s"`
+	Timeout      time.Duration `yaml:"timeout" json:"timeout" validate:"required_if=Enabled true,min=1s,max=30s" default:"5s"`
+	Query        string        `yaml:"query" json:"query" validate:"required_if=Enabled true,min=1,max=1000" default:"SELECT 1"`
+	MaxFailures  int           `yaml:"max_failures" json:"max_failures" validate:"required_if=Enabled true,min=1,max=10" default:"3"`
+	RecoveryTime time.Duration `yaml:"recovery_time" json:"recovery_time" validate:"required_if=Enabled true,min=1s,max=10m" default:"1m"`
 }
 
 // EncryptionConfig represents encryption configuration
 type EncryptionConfig struct {
 	// Global encryption settings
-	Enabled   bool   `yaml:"enabled" json:"enabled"`
-	Algorithm string `yaml:"algorithm" json:"algorithm" validate:"required_if=Enabled true,oneof=aes-256-gcm aes-256-cbc chacha20-poly1305,max=32"`
+	Enabled   bool   `yaml:"enabled" json:"enabled" default:"true"`
+	Algorithm string `yaml:"algorithm" json:"algorithm" validate:"required_if=Enabled true,oneof=aes-256-gcm aes-256-cbc chacha20-poly1305,max=32" default:"aes-256-gcm"`
 }
 
 // ReadReplicaConfig represents read replica configuration
@@ -102,34 +102,34 @@ type ReadReplicaConfig struct {
 	Database string `yaml:"database" json:"database" validate:"omitempty,min=1,max=64"`
 	Username string `yaml:"username" json:"username" validate:"omitempty,min=1,max=32"`
 	Password string `yaml:"password" json:"password" validate:"omitempty,min=1,max=128"`
-	SSLMode  string `yaml:"ssl_mode" json:"ssl_mode" validate:"omitempty,oneof=disable require verify-ca verify-full,max=20"`
+	SSLMode  string `yaml:"ssl_mode" json:"ssl_mode" validate:"omitempty,oneof=disable require verify-ca verify-full,max=20" default:"disable"`
 
 	// Read replica specific settings
-	Weight     int           `yaml:"weight" json:"weight" validate:"omitempty,min=1,max=100"`                          // Load balancing weight
-	MaxLatency time.Duration `yaml:"max_latency" json:"max_latency" validate:"omitempty,min=1ms,max=5s,default=100ms"` // Maximum acceptable latency
-	Enabled    bool          `yaml:"enabled" json:"enabled" validate:"omitempty,default=true"`                         // Whether this replica is enabled
+	Weight     int           `yaml:"weight" json:"weight" validate:"omitempty,min=1,max=100" default:"1"`                // Load balancing weight
+	MaxLatency time.Duration `yaml:"max_latency" json:"max_latency" validate:"omitempty,min=1ms,max=5s" default:"100ms"` // Maximum acceptable latency
+	Enabled    bool          `yaml:"enabled" json:"enabled" default:"true"`                                              // Whether this replica is enabled
 
 	// Connection pool settings for read replica (can override main config)
-	MaxConnections     int           `yaml:"max_connections" json:"max_connections" validate:"omitempty,min=1,max=1000"`
-	MinConnections     int           `yaml:"min_connections" json:"min_connections" validate:"omitempty,min=0,max=100"`
-	MaxIdleConnections int           `yaml:"max_idle_connections" json:"max_idle_connections" validate:"omitempty,min=0,max=100"`
-	MaxLifetime        time.Duration `yaml:"max_lifetime" json:"max_lifetime" validate:"omitempty,min=1m,max=12h,default=1h"`
-	IdleTimeout        time.Duration `yaml:"idle_timeout" json:"idle_timeout" validate:"omitempty,min=30s,max=1h,default=5m"`
+	MaxConnections     int           `yaml:"max_connections" json:"max_connections" validate:"omitempty,min=1,max=1000" default:"50"`
+	MinConnections     int           `yaml:"min_connections" json:"min_connections" validate:"omitempty,min=0,max=100" default:"5"`
+	MaxIdleConnections int           `yaml:"max_idle_connections" json:"max_idle_connections" validate:"omitempty,min=0,max=100" default:"10"`
+	MaxLifetime        time.Duration `yaml:"max_lifetime" json:"max_lifetime" validate:"omitempty,min=1m,max=12h" default:"1h"`
+	IdleTimeout        time.Duration `yaml:"idle_timeout" json:"idle_timeout" validate:"omitempty,min=30s,max=1h" default:"5m"`
 }
 
 // ObservabilityConfig represents observability configuration
 type ObservabilityConfig struct {
-	EnableMetrics bool   `yaml:"enable_metrics" json:"enable_metrics"`
-	EnableTracing bool   `yaml:"enable_tracing" json:"enable_tracing"`
-	EnableLogging bool   `yaml:"enable_logging" json:"enable_logging"`
-	LogLevel      string `yaml:"log_level" json:"log_level" validate:"omitempty,oneof=debug info warn error fatal,max=10"`
+	EnableMetrics bool   `yaml:"enable_metrics" json:"enable_metrics" default:"true"`
+	EnableTracing bool   `yaml:"enable_tracing" json:"enable_tracing" default:"true"`
+	EnableLogging bool   `yaml:"enable_logging" json:"enable_logging" default:"true"`
+	LogLevel      string `yaml:"log_level" json:"log_level" validate:"omitempty,oneof=debug info warn error fatal,max=10" default:"info"`
 }
 
 // PaginationConfig represents pagination configuration
 type PaginationConfig struct {
-	DefaultLimit int `yaml:"default_limit" json:"default_limit" validate:"required,min=1,max=1000"`
-	MaxLimit     int `yaml:"max_limit" json:"max_limit" validate:"required,min=1,max=1000"`
-	MinLimit     int `yaml:"min_limit" json:"min_limit" validate:"required,min=1,max=1000"`
+	DefaultLimit int `yaml:"default_limit" json:"default_limit" validate:"required,min=1,max=10000" default:"20"`
+	MaxLimit     int `yaml:"max_limit" json:"max_limit" validate:"required,min=1,max=100000" default:"100"`
+	MinLimit     int `yaml:"min_limit" json:"min_limit" validate:"required,min=1,max=1000" default:"1"`
 }
 
 // ConnectionString returns the database connection string
