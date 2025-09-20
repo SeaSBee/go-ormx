@@ -59,7 +59,7 @@ log_level: info                     # Log level: debug, info, warn, error, fatal
 log_format: json                    # Log format: json, text
 log_fields:                         # Additional log fields
   service: "go-ormx"
-  version: "1.0.0"
+  version: "1.2.3"
   environment: "development"
 
 # Observability Configuration
