@@ -292,10 +292,6 @@ func (c *DatabaseConfig) Validate() error {
 	if c.MaxResultSize < 1000 || c.MaxResultSize > 1000000 {
 		return fmt.Errorf("max_result_size must be between 1KB and 1MB, got %d", c.MaxResultSize)
 	}
-	if c.MaxResultSize > c.MaxQuerySize {
-		return fmt.Errorf("max_result_size (%d) cannot be greater than max_query_size (%d)",
-			c.MaxResultSize, c.MaxQuerySize)
-	}
 
 	// Validate health check interval consistency
 	if c.HealthCheckInterval < 5*time.Second || c.HealthCheckInterval > 5*time.Minute {
